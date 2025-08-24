@@ -25,3 +25,8 @@ export interface CreatedBrandData {
   status: BrandStatus;
   owner_name: string;
 }
+
+export interface UpdateBrandPayload {
+  name?: string;
+  status?: BrandStatus;
+}

@@ -2,16 +2,49 @@
 
 import useSWR from 'swr';
 import { BrandsService } from '@/services/brands';
-import type { Brand } from '@/types/brands';
+import type { Brand, BrandStatus } from '@/types/brands';
 import { useState } from 'react';
 
 export default function BrandsPage() {
   const [ownerFilter, setOwnerFilter] = useState('');
+  const [editingBrand, setEditingBrand] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState<{name: string, status: BrandStatus}>({
+    name: '',
+    status: 'PENDIENTE'
+  });
 
   const { data, error, isLoading, mutate } = useSWR<Brand[]>(
     ['/brands', ownerFilter],
     () => BrandsService.list(ownerFilter)
   );
+
+  const startEdit = (brand: Brand) => {
+    setEditingBrand(brand.id);
+    setEditForm({
+      name: brand.name,
+      status: brand.status
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingBrand(null);
+    setEditForm({ name: '', status: 'PENDIENTE' });
+  };
+
+  const handleUpdate = async (id: number) => {
+    try {
+      await BrandsService.update(id, {
+        name: editForm.name,
+        status: editForm.status
+      });
+      setEditingBrand(null);
+      setEditForm({ name: '', status: 'PENDIENTE' });
+      mutate(); // Actualizar la tabla
+    } catch (error) {
+      console.error('Error updating brand:', error);
+      alert('Error al actualizar la marca');
+    }
+  };
 
   const onDelete = async (id: number) => {
     if (!confirm('¿Eliminar esta marca?')) return;
@@ -47,15 +80,16 @@ export default function BrandsPage() {
 
   const getStatusColor = (status: string) => {
     const colors = {
-      'activo': 'bg-green-500/20 text-green-300 border-green-500/30',
-      'inactivo': 'bg-red-500/20 text-red-300 border-red-500/30',
       'pendiente': 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+      'aprobada': 'bg-green-500/20 text-green-300 border-green-500/30',  
+      'rechazada': 'bg-red-500/20 text-red-300 border-red-500/30',
     };
     return colors[status.toLowerCase() as keyof typeof colors] || 'bg-gray-500/20 text-gray-300 border-gray-500/30';
   };
 
   return (
     <div className="space-y-8">
+      {/* Header elegante con gradiente */}
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 via-blue-600/20 to-purple-600/20 rounded-3xl blur-xl"></div>
         <div className="relative bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-8">
@@ -114,9 +148,9 @@ export default function BrandsPage() {
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 hover:bg-white/15 transition-all duration-300">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-white/60 text-sm">Activas</p>
+              <p className="text-white/60 text-sm">Aprobadas</p>
               <p className="text-3xl font-bold text-green-400">
-                {data?.filter(b => b.status?.toLowerCase() === 'activo').length || 0}
+                {data?.filter(b => b.status?.toLowerCase() === 'aprobada').length || 0}
               </p>
             </div>
             <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
@@ -144,6 +178,7 @@ export default function BrandsPage() {
         </div>
       </div>
 
+      {/* Tabla moderna con efectos */}
       <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 overflow-hidden">
         <div className="overflow-auto">
           <table className="w-full">
@@ -168,34 +203,77 @@ export default function BrandsPage() {
                         {brand.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <div className="text-white font-semibold text-lg">{brand.name}</div>
-                        <div className="text-white/50 text-sm">Marca registrada</div>
+                        {editingBrand === brand.id ? (
+                          <input
+                            type="text"
+                            value={editForm.name}
+                            onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                            className="bg-white/10 border border-white/30 rounded-lg px-3 py-1 text-white text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                            autoFocus
+                          />
+                        ) : (
+                          <>
+                            <div className="text-white font-semibold text-lg">{brand.name}</div>
+                            <div className="text-white/50 text-sm">Marca registrada</div>
+                          </>
+                        )}
                       </div>
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(brand.status || '')}`}>
-                      <div className="w-2 h-2 rounded-full bg-current mr-2"></div>
-                      {brand.status}
-                    </span>
+                    {editingBrand === brand.id ? (
+                      <select
+                        value={editForm.status}
+                        onChange={(e) => setEditForm({...editForm, status: e.target.value as BrandStatus})}
+                        className="bg-white/10 border border-white/30 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                      >
+                        <option value="PENDIENTE" className="bg-gray-800">PENDIENTE</option>
+                        <option value="APROBADA" className="bg-gray-800">APROBADA</option>
+                        <option value="RECHAZADA" className="bg-gray-800">RECHAZADA</option>
+                      </select>
+                    ) : (
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(brand.status || '')}`}>
+                        <div className="w-2 h-2 rounded-full bg-current mr-2"></div>
+                        {brand.status}
+                      </span>
+                    )}
                   </td>
                   <td className="px-8 py-6">
                     <div className="text-white font-medium">{brand.owner?.name}</div>
                   </td>
                   <td className="px-8 py-6 text-right">
                     <div className="flex justify-end space-x-2 opacity-60 group-hover:opacity-100 transition-opacity duration-200">
-                      <button
-                        onClick={() => alert('Editar (próximamente)')}
-                        className="bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 rounded-xl px-4 py-2 text-white text-sm font-medium transition-all duration-200 hover:scale-105"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => onDelete(brand.id)}
-                        className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 hover:border-red-500/50 rounded-xl px-4 py-2 text-red-300 hover:text-red-200 text-sm font-medium transition-all duration-200 hover:scale-105"
-                      >
-                        Eliminar
-                      </button>
+                      {editingBrand === brand.id ? (
+                        <>
+                          <button
+                            onClick={() => handleUpdate(brand.id)}
+                            className="bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 hover:border-green-500/50 rounded-xl px-4 py-2 text-green-300 hover:text-green-200 text-sm font-medium transition-all duration-200 hover:scale-105"
+                          >
+                            Actualizar
+                          </button>
+                          <button
+                            onClick={cancelEdit}
+                            className="bg-gray-500/20 hover:bg-gray-500/30 border border-gray-500/30 hover:border-gray-500/50 rounded-xl px-4 py-2 text-gray-300 hover:text-gray-200 text-sm font-medium transition-all duration-200 hover:scale-105"
+                          >
+                            Cancelar
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => startEdit(brand)}
+                            className="bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 rounded-xl px-4 py-2 text-white text-sm font-medium transition-all duration-200 hover:scale-105"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => onDelete(brand.id)}
+                            className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 hover:border-red-500/50 rounded-xl px-4 py-2 text-red-300 hover:text-red-200 text-sm font-medium transition-all duration-200 hover:scale-105"
+                          >
+                            Eliminar
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
