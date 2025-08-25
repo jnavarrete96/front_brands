@@ -40,9 +40,24 @@ export default function BrandsPage() {
       setEditingBrand(null);
       setEditForm({ name: '', status: 'PENDIENTE' });
       mutate(); // Actualizar la tabla
-    } catch (error) {
-      console.error('Error updating brand:', error);
-      alert('Error al actualizar la marca');
+    } catch (error: unknown) {
+      const err = error as {
+        errors?: { name?: string[] };
+        message?: string;
+      };
+
+      const errorMessage = err.errors?.name?.[0] || err.message || 'Error al actualizar la marca';
+
+      // Mostrar notificación de error por 2 segundos
+      const notification = document.createElement('div');
+      notification.className =
+        'fixed top-8 right-8 z-50 bg-red-500/20 border border-red-500/30 text-red-300 backdrop-blur-xl rounded-2xl p-4 shadow-lg transition-all duration-300';
+      notification.textContent = errorMessage;
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        document.body.removeChild(notification);
+      }, 2000);
     }
   };
 
