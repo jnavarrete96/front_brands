@@ -5,6 +5,7 @@ import { BrandsService } from '@/services/brands';
 import type { Brand, BrandStatus } from '@/types/brands';
 import { useState } from 'react';
 import PageHeader from '@/components/PageHeader';
+import { useDebounce } from '@/hooks/useDebounce';
 
 export default function BrandsPage() {
   const [ownerFilter, setOwnerFilter] = useState('');
@@ -13,9 +14,11 @@ export default function BrandsPage() {
     name: '',
     status: 'PENDIENTE',
   });
-
-  const { data, error, isLoading, mutate } = useSWR<Brand[]>(['/brands', ownerFilter], () =>
-    BrandsService.searchByOwner(ownerFilter)
+  const debouncedOwnerFilter = useDebounce(ownerFilter, 500);
+  const shouldFetch = debouncedOwnerFilter !== null;
+  const { data, error, isLoading, mutate } = useSWR<Brand[]>(
+    shouldFetch ? ['/brands', debouncedOwnerFilter] : null,
+    () => BrandsService.searchByOwner(debouncedOwnerFilter)
   );
 
   const startEdit = (brand: Brand) => {
