@@ -16,7 +16,7 @@ export default function BrandsPage() {
 
   const { data, error, isLoading, mutate } = useSWR<Brand[]>(
     ['/brands', ownerFilter],
-    () => BrandsService.list(ownerFilter)
+    () => BrandsService.searchByOwner(ownerFilter)
   );
 
   const startEdit = (brand: Brand) => {

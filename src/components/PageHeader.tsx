@@ -3,10 +3,10 @@
 import { usePathname } from 'next/navigation';
 
 interface PageHeaderProps {
-  title: string;
-  subtitle: string;
-  ownerFilter?: string;
-  onOwnerFilterChange?: (value: string) => void;
+  readonly title: string;
+  readonly subtitle: string;
+  readonly ownerFilter?: string;
+  readonly onOwnerFilterChange?: (value: string) => void;
 }
 
 export default function PageHeader({ 
