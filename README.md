@@ -30,7 +30,7 @@ npm run dev
 # o
 yarn dev
 ```
-Accede a (http://localhost:3000) para ver la aplicación en acción.
+Accede a `http://localhost:3000` para ver la aplicación en acción.
 
 ---
 
