@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { readonly children: ReactNode 
             <nav className="p-4 space-y-2">
               <Link 
                 className="group flex items-center space-x-3 rounded-xl px-4 py-3 text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/20" 
-                href="/brands"
+                href="/"
               >
                 <svg className="w-5 h-5 text-purple-400 group-hover:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
