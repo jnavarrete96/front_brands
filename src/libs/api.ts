@@ -4,12 +4,12 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL!;
 
 const buildUrl = (path: string, query?: Record<string, string | number | boolean | undefined>) => {
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  
+
   const baseUrl = BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/';
-  
+
   const fullUrl = baseUrl + cleanPath;
   const url = new URL(fullUrl);
-  
+
   if (query) {
     Object.entries(query).forEach(([k, v]) => {
       if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
@@ -49,6 +49,5 @@ export const api = {
   patch: <T>(path: string, body: unknown) =>
     request<T>(buildUrl(path), { method: 'PATCH', body: JSON.stringify(body) }),
 
-  delete: <T>(path: string) =>
-    request<T>(buildUrl(path), { method: 'DELETE' }),
+  delete: <T>(path: string) => request<T>(buildUrl(path), { method: 'DELETE' }),
 };
